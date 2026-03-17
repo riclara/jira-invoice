@@ -30,6 +30,10 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/riclara/jira-invoice.git"
+  },
   "publishConfig": {
     "access": "public"
   }
