@@ -11,7 +11,16 @@ CLI interactivo para generar invoices PDF desde reportes de Jira Logged Time.
 ## Instalacion
 
 ```bash
-cd ~/workspace/invoice-generator
+npm install -g jira-invoice
+```
+
+Esto instala dos comandos: `jira-invoice` y su alias `invoice`.
+
+### Desde el codigo fuente
+
+```bash
+git clone https://github.com/riclara/jira-invoice.git
+cd jira-invoice
 npm install
 npm run build
 npm link
