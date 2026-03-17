@@ -34,6 +34,7 @@ export interface Company {
 }
 
 export interface AppConfig {
+  locale?: "es" | "en";
   user: ContactInfo;
   companies: Company[];
 }
