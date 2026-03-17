@@ -469,18 +469,18 @@ export async function main(): Promise<void> {
   const program = new Command();
   program
     .name("invoice")
-    .description("Genera invoices PDF a partir de CSVs exportados de Jira Logged Time.")
+    .description("Generate PDF invoices from Jira Logged Time CSV exports.")
     .version(PKG_VERSION)
     .addHelpText("after", `
-Modos de uso:
-  invoice                   Modo interactivo con prompts paso a paso
-  invoice generate f.csv    Modo directo sin prompts
+Usage modes:
+  invoice                   Interactive mode with step-by-step prompts
+  invoice generate f.csv    Direct mode without prompts
 
-Ejemplos:
-  $ invoice                              Inicia el wizard interactivo
-  $ invoice generate reporte.csv         Genera con defaults de la empresa
-  $ invoice generate r.csv --rate 50     Usa tarifa personalizada
-  $ invoice generate r.csv --company x   Especifica empresa por ID
+Examples:
+  $ invoice                              Start the interactive wizard
+  $ invoice generate report.csv          Generate with company defaults
+  $ invoice generate r.csv --rate 50     Use a custom hourly rate
+  $ invoice generate r.csv --company x   Specify company by ID
 `)
     .action(async () => {
       try {
@@ -496,13 +496,13 @@ Ejemplos:
 
   program
     .command("generate")
-    .description("Genera invoice directamente (sin prompts interactivos)")
-    .argument("<csv>", "CSV exportado de Jira")
-    .option("--rate <number>", "Tarifa por hora (default: tarifa de la empresa)")
-    .option("--date <string>", "Fecha del invoice (default: hoy)")
-    .option("--number <string>", "Número de invoice")
-    .option("--output <string>", "Ruta del PDF de salida")
-    .option("--company <id>", "ID de la empresa")
+    .description("Generate invoice directly (no interactive prompts)")
+    .argument("<csv>", "Jira CSV export file")
+    .option("--rate <number>", "Hourly rate (default: company rate)")
+    .option("--date <string>", "Invoice date (default: today)")
+    .option("--number <string>", "Invoice number")
+    .option("--output <string>", "Output PDF path")
+    .option("--company <id>", "Company ID")
     .action(runDirect);
 
   await program.parseAsync();
