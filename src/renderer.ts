@@ -34,19 +34,19 @@ const printer = new PdfPrinter({
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function formatDate(d: Date): string {
+export function formatDate(d: Date): string {
   const dd = String(d.getDate()).padStart(2, "0");
   const mon = MONTH_NAMES[d.getMonth()];
   const yy = String(d.getFullYear()).slice(2);
   return `${dd}/${mon}/${yy}`;
 }
 
-function formatDateLong(d: Date): string {
+export function formatDateLong(d: Date): string {
   const mon = MONTH_NAMES[d.getMonth()];
   return `${mon} ${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function fmtMoney(n: number): string {
+export function fmtMoney(n: number): string {
   return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 

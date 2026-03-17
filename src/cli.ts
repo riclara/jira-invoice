@@ -3,8 +3,12 @@
  */
 
 import { existsSync, readdirSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { Command } from "commander";
+
+const require = createRequire(import.meta.url);
+const { version: PKG_VERSION } = require("../package.json");
 import { input, confirm, search } from "@inquirer/prompts";
 import chalk from "chalk";
 import Table from "cli-table3";
@@ -461,12 +465,23 @@ async function runDirect(csv: string, opts: { rate?: string; date?: string; numb
 
 // ── Entry point ─────────────────────────────────────────────────────────────
 
-export function main(): void {
+export async function main(): Promise<void> {
   const program = new Command();
   program
     .name("invoice")
-    .description("Genera invoices PDF desde CSV de Jira Logged Time")
-    .version("1.0.0")
+    .description("Generate PDF invoices from Jira Logged Time CSV exports.")
+    .version(PKG_VERSION)
+    .addHelpText("after", `
+Usage modes:
+  invoice                   Interactive mode with step-by-step prompts
+  invoice generate f.csv    Direct mode without prompts
+
+Examples:
+  $ invoice                              Start the interactive wizard
+  $ invoice generate report.csv          Generate with company defaults
+  $ invoice generate r.csv --rate 50     Use a custom hourly rate
+  $ invoice generate r.csv --company x   Specify company by ID
+`)
     .action(async () => {
       try {
         await runInteractive();
@@ -481,14 +496,14 @@ export function main(): void {
 
   program
     .command("generate")
-    .description("Modo directo (no interactivo)")
-    .argument("<csv>", "CSV exportado de Jira")
-    .option("--rate <number>", "Tarifa por hora (default: tarifa de la empresa)")
-    .option("--date <string>", "Fecha del invoice (default: hoy)")
-    .option("--number <string>", "Número de invoice")
-    .option("--output <string>", "Ruta del PDF de salida")
-    .option("--company <id>", "ID de la empresa")
+    .description("Generate invoice directly (no interactive prompts)")
+    .argument("<csv>", "Jira CSV export file")
+    .option("--rate <number>", "Hourly rate (default: company rate)")
+    .option("--date <string>", "Invoice date (default: today)")
+    .option("--number <string>", "Invoice number")
+    .option("--output <string>", "Output PDF path")
+    .option("--company <id>", "Company ID")
     .action(runDirect);
 
-  program.parse();
+  await program.parseAsync();
 }

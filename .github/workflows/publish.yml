@@ -62,6 +62,10 @@ jobs:
         if: ${{ steps.npm_status.outputs.published != 'true' }}
         run: npm run build
 
+      - name: Run tests
+        if: ${{ steps.npm_status.outputs.published != 'true' }}
+        run: npm test
+
       - name: Publish jira-invoice to npm
         if: ${{ steps.npm_status.outputs.published != 'true' }}
         run: npm publish
