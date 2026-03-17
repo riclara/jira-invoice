@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/riclara/jira-invoice/compare/jira-invoice-v1.0.1...jira-invoice-v1.0.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* add repository field to package.json ([5b8a900](https://github.com/riclara/jira-invoice/commit/5b8a900b96aed9b3a1ab1c7514798569a42f6240))
+* add repository field to package.json ([a21870c](https://github.com/riclara/jira-invoice/commit/a21870c5ff65caa465a4eec34b7d1590e00eb7c2))
+
 ## [1.0.1](https://github.com/riclara/jira-invoice/compare/jira-invoice-v1.0.0...jira-invoice-v1.0.1) (2026-03-17)
 
 
