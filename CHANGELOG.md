@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/riclara/jira-invoice/compare/jira-invoice-v1.0.2...jira-invoice-v1.1.0) (2026-03-17)
+
+
+### Features
+
+* add unit tests, auto-update check, and improved --help ([75f5e01](https://github.com/riclara/jira-invoice/commit/75f5e0177fd47d54cd188089b506715c9aead825))
+* add unit tests, auto-update check, and improved --help ([5cfc84f](https://github.com/riclara/jira-invoice/commit/5cfc84f1f7a7854e09d6dd1da7141d18920f2575))
+* translate CLI help text to English ([adbe85b](https://github.com/riclara/jira-invoice/commit/adbe85b739d3b8fdc46db5a8c61b51ead12eeeeb))
+
 ## [1.0.2](https://github.com/riclara/jira-invoice/compare/jira-invoice-v1.0.1...jira-invoice-v1.0.2) (2026-03-17)
 
 
