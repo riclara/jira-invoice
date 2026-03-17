@@ -7,6 +7,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import chalk from "chalk";
+import { t } from "./i18n.js";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -99,13 +100,14 @@ export function showUpdateMessage(currentVersion: string, latestVersion: string 
   if (!latestVersion) return;
   if (!isNewer(latestVersion, currentVersion)) return;
 
+  const s = t();
   console.log();
   console.log(
-    chalk.yellow("⚡ Nueva versión disponible: ") +
+    chalk.yellow(s.newVersionAvailable) +
     chalk.dim(currentVersion) +
     chalk.yellow(" → ") +
     chalk.bold.green(latestVersion)
   );
-  console.log(chalk.dim("   Ejecuta: ") + chalk.cyan("npm update -g jira-invoice"));
+  console.log(chalk.dim(s.updateCommand) + chalk.cyan("npm update -g jira-invoice"));
   console.log();
 }

@@ -17,6 +17,7 @@ import { parse } from "./parser.js";
 import { render } from "./renderer.js";
 import { configExists, loadConfig } from "./store.js";
 import { runSetupWizard, selectCompany } from "./setup.js";
+import { t, setLocale } from "./i18n.js";
 import type { WorkEntry, AppConfig, Company } from "./types.js";
 
 // ── CSV file selector (árbol + filtro por texto) ─────────────────────────────
@@ -65,7 +66,7 @@ async function selectCsvFile(startDir?: string): Promise<string> {
     const items = listDir(cwd);
 
     const selected = await search<string>({
-      message: `📂 ${chalk.dim(shortCwd)} — escribe para filtrar:`,
+      message: t().csvFilterPrompt(chalk.dim(shortCwd)),
       source: (term) => {
         const q = (term ?? "").toLowerCase();
         if (!q) {
@@ -105,10 +106,11 @@ async function selectCsvFile(startDir?: string): Promise<string> {
 // ── Header ──────────────────────────────────────────────────────────────────
 
 function printHeader(): void {
+  const s = t();
   console.log();
   console.log(chalk.blue("┌─────────────────────────────────────────┐"));
   console.log(chalk.blue("│") + chalk.bold.white("  ⚡ Invoice Generator") + chalk.blue("                   │"));
-  console.log(chalk.blue("│") + chalk.dim("  Genera invoices PDF desde CSV de Jira") + chalk.blue("  │"));
+  console.log(chalk.blue("│") + chalk.dim(`  ${s.headerSubtitle}`) + chalk.blue("  │"));
   console.log(chalk.blue("└─────────────────────────────────────────┘"));
   console.log();
 }
@@ -116,30 +118,31 @@ function printHeader(): void {
 // ── Preview table ───────────────────────────────────────────────────────────
 
 function printPreview(entries: WorkEntry[], rate: number, hasLimit: boolean): void {
+  const s = t();
   const head = hasLimit
     ? [
-        chalk.bold.white("  #"),
-        chalk.bold.white("Fecha"),
-        chalk.bold.white("Ticket"),
-        chalk.bold.white("Tarea"),
-        chalk.bold.white("Trabajadas"),
-        chalk.bold.white("Horas"),
-        chalk.bold.white("Subtotal"),
+        chalk.bold.white(s.colNum),
+        chalk.bold.white(s.colDate),
+        chalk.bold.white(s.colTicket),
+        chalk.bold.white(s.colTask),
+        chalk.bold.white(s.colWorked),
+        chalk.bold.white(s.colHours),
+        chalk.bold.white(s.colSubtotal),
       ]
     : [
-        chalk.bold.white("  #"),
-        chalk.bold.white("Fecha"),
-        chalk.bold.white("Ticket"),
-        chalk.bold.white("Tarea"),
-        chalk.bold.white("Horas"),
-        chalk.bold.white("Subtotal"),
+        chalk.bold.white(s.colNum),
+        chalk.bold.white(s.colDate),
+        chalk.bold.white(s.colTicket),
+        chalk.bold.white(s.colTask),
+        chalk.bold.white(s.colHours),
+        chalk.bold.white(s.colSubtotal),
       ];
 
   const colWidths = hasLimit
     ? [5, 14, 13, 36, 12, 9, 12]
     : [5, 14, 13, 50, 9, 12];
 
-  const t = new Table({ head, colWidths, style: { head: [], border: ["blue"] } });
+  const table = new Table({ head, colWidths, style: { head: [], border: ["blue"] } });
 
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
@@ -166,19 +169,19 @@ function printPreview(entries: WorkEntry[], rate: number, hasLimit: boolean): vo
           chalk.bold.green(`$${fmtMoney(e.hours * rate)}`),
         ];
 
-    t.push(row);
+    table.push(row);
   }
 
-  const totalH = entries.reduce((s, e) => s + e.hours, 0);
+  const totalH = entries.reduce((sum, e) => sum + e.hours, 0);
   const totalA = totalH * rate;
   const emptyPad = hasLimit ? ["", "", "", ""] : ["", "", ""];
-  t.push([
+  table.push([
     ...emptyPad,
     chalk.bold(`${totalH.toFixed(1)} h`),
     chalk.bold.green(`$${fmtMoney(totalA)}`),
   ]);
 
-  console.log(t.toString());
+  console.log(table.toString());
   console.log();
 }
 
@@ -186,10 +189,11 @@ function printPreview(entries: WorkEntry[], rate: number, hasLimit: boolean): vo
 
 async function editLoop(entries: WorkEntry[], rate: number, hasLimit: boolean): Promise<WorkEntry[]> {
   const result = [...entries];
+  const s = t();
 
   while (true) {
     const rowStr = await input({
-      message: "✏️  Editar fila # (o enter para continuar):",
+      message: s.editRowPrompt,
       default: "",
     });
 
@@ -197,30 +201,30 @@ async function editLoop(entries: WorkEntry[], rate: number, hasLimit: boolean): 
 
     const idx = parseInt(rowStr) - 1;
     if (isNaN(idx) || idx < 0 || idx >= result.length) {
-      console.log(chalk.red(`  Fila inválida. Usa 1-${result.length}`));
+      console.log(chalk.red(s.invalidRow(result.length)));
       continue;
     }
 
     const e = result[idx];
     console.log();
-    console.log(chalk.dim(`  Editando fila ${idx + 1}: ${e.ticket} ${e.desc}`));
+    console.log(chalk.dim(s.editingRow(idx + 1, e.ticket, e.desc)));
 
     const newDateStr = await input({
-      message: "  Fecha (dd/Mon/yy):",
+      message: s.datePrompt,
       default: formatDate(e.date),
     });
     const newTicket = await input({
-      message: "  Ticket:",
+      message: s.ticketPrompt,
       default: e.ticket,
     });
     const newDesc = await input({
-      message: "  Descripción:",
+      message: s.descriptionPrompt,
       default: e.desc,
     });
     const newHoursStr = await input({
-      message: "  Horas:",
+      message: s.hoursPrompt,
       default: e.hours.toFixed(1),
-      validate: (v) => (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || "Número inválido",
+      validate: (v) => (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || s.invalidNumber,
     });
 
     // Parse the date
@@ -240,7 +244,7 @@ async function editLoop(entries: WorkEntry[], rate: number, hasLimit: boolean): 
       rawHours: e.rawHours,
     };
 
-    console.log(chalk.green("  ✓ Fila actualizada"));
+    console.log(chalk.green(s.rowUpdated));
     console.log();
     printPreview(result, rate, hasLimit);
   }
@@ -267,7 +271,7 @@ function checkWarnings(entries: WorkEntry[], maxHoursPerDay: number | null): voi
   }
 
   if (capped.length > 0) {
-    console.log(chalk.yellow(`⚠  ${capped.length} día(s) con menos de ${maxHoursPerDay}h facturables`));
+    console.log(chalk.yellow(t().daysBelowLimit(capped.length, maxHoursPerDay)));
     for (const d of capped.sort()) {
       console.log(chalk.dim(`   • ${d}: ${byDay.get(d)!.toFixed(2)} h`));
     }
@@ -306,10 +310,15 @@ async function getConfig(): Promise<AppConfig> {
 // ── Interactive mode ────────────────────────────────────────────────────────
 
 async function runInteractive(): Promise<void> {
-  printHeader();
-
   // 1. Config
   let config = await getConfig();
+
+  // Set locale from config
+  setLocale(config.locale ?? "es");
+
+  printHeader();
+
+  const s = t();
 
   // 2. Select company
   const { company, config: updatedConfig } = await selectCompany(config);
@@ -318,29 +327,29 @@ async function runInteractive(): Promise<void> {
 
   console.log();
   const cur = company.currency ?? "USD";
-  console.log(`${chalk.green("✓")} Empresa: ${chalk.bold(company.name)} (${company.rate} ${cur}/h${hasLimit ? `, max ${company.maxHoursPerDay}h/día` : ""})`);
+  console.log(`${chalk.green("✓")} ${s.company}: ${chalk.bold(company.name)} (${company.rate} ${cur}/h${hasLimit ? s.maxPerDay(company.maxHoursPerDay!) : ""})`);
 
   // 3. CSV path
   const csvPath = await selectCsvFile();
 
   // 4. Parse
   console.log();
-  const spinner = ora({ text: chalk.blue("Leyendo CSV..."), color: "blue" }).start();
+  const spinner = ora({ text: chalk.blue(s.readingCsv), color: "blue" }).start();
   const { entries: parsedEntries, format } = parse(csvPath, company.maxHoursPerDay);
-  spinner.succeed(`${chalk.bold(String(parsedEntries.length))} entradas encontradas ${chalk.dim(`(${format} format)`)}`);
+  spinner.succeed(`${chalk.bold(String(parsedEntries.length))} ${chalk.dim(s.entriesFound(parsedEntries.length, format).replace(String(parsedEntries.length) + " ", ""))}`);
   console.log();
 
   // 5. Rate
   const rateStr = await input({
-    message: `💵  Tarifa por hora (${cur}):`,
+    message: s.ratePrompt(cur),
     default: company.rate.toFixed(2),
-    validate: (v) => (!isNaN(parseFloat(v)) && parseFloat(v) > 0) || "Ingresa un número válido",
+    validate: (v) => (!isNaN(parseFloat(v)) && parseFloat(v) > 0) || s.invalidNumber,
   });
   const rate = parseFloat(rateStr);
 
   // 6. Preview
   console.log();
-  console.log(chalk.dim.blue("─── Vista previa ───────────────────────────────────────"));
+  console.log(chalk.dim.blue(s.preview));
   console.log();
   printPreview(parsedEntries, rate, hasLimit);
   checkWarnings(parsedEntries, company.maxHoursPerDay);
@@ -350,7 +359,7 @@ async function runInteractive(): Promise<void> {
 
   // 8. Invoice date (vacío = fecha actual)
   const invDateInput = await input({
-    message: "📅  Fecha del invoice (enter = hoy):",
+    message: s.invoiceDatePrompt,
     default: "",
   });
   const invDate = invDateInput.trim() || defaultDateStr();
@@ -359,7 +368,7 @@ async function runInteractive(): Promise<void> {
   const endDt = entries[entries.length - 1].date;
   const defaultNum = `INV-${endDt.getFullYear()}-${String(endDt.getMonth() + 1).padStart(2, "0")}${String(endDt.getDate()).padStart(2, "0")}`;
   const invNum = await input({
-    message: "🔢  Número de invoice:",
+    message: s.invoiceNumberPrompt,
     default: defaultNum,
   });
 
@@ -367,7 +376,7 @@ async function runInteractive(): Promise<void> {
   let showRawHours = false;
   if (hasLimit) {
     showRawHours = await confirm({
-      message: "📊  ¿Incluir columna de horas trabajadas en el PDF?",
+      message: s.includeWorkedHours,
       default: false,
     });
   }
@@ -377,45 +386,45 @@ async function runInteractive(): Promise<void> {
   const fmtDt = (d: Date) => `${String(d.getDate()).padStart(2, "0")}${MONTH_NAMES[d.getMonth()]}${String(d.getFullYear()).slice(2)}`;
   const defaultOut = join(dirname(csvPath), `invoice_${fmtDt(startDt)}_to_${fmtDt(endDt)}.pdf`);
   const outPath = await input({
-    message: "💾  Guardar PDF en:",
+    message: s.savePdfPrompt,
     default: defaultOut,
   });
 
   // 12. Summary
   console.log();
-  const totalH = entries.reduce((s, e) => s + e.hours, 0);
+  const totalH = entries.reduce((sum, e) => sum + e.hours, 0);
   const summary = new Table({ style: { head: [], border: ["blue"] } });
   summary.push(
-    { Empresa: company.name },
-    { "Invoice #": invNum },
-    { Fecha: invDate },
-    { Tarifa: `${cur} ${rate.toFixed(2)}/h` },
-    { "Total horas": `${totalH.toFixed(1)} h` },
-    { "Total monto": `${cur} ${fmtMoney(totalH * rate)}` },
-    { Archivo: outPath },
+    { [s.summaryCompany]: company.name },
+    { [s.summaryInvoiceNum]: invNum },
+    { [s.summaryDate]: invDate },
+    { [s.summaryRate]: `${cur} ${rate.toFixed(2)}/h` },
+    { [s.summaryTotalHours]: `${totalH.toFixed(1)} h` },
+    { [s.summaryTotalAmount]: `${cur} ${fmtMoney(totalH * rate)}` },
+    { [s.summaryFile]: outPath },
   );
   console.log(summary.toString());
   console.log();
 
   // 13. Confirm
-  const ok = await confirm({ message: "¿Generar invoice?", default: true });
+  const ok = await confirm({ message: s.generateInvoice, default: true });
   if (!ok) {
-    console.log(chalk.dim("Cancelado."));
+    console.log(chalk.dim(s.cancelled));
     process.exit(0);
   }
 
   // 14. Generate
   console.log();
-  const genSpinner = ora({ text: chalk.blue("Generando PDF..."), color: "blue" }).start();
+  const genSpinner = ora({ text: chalk.blue(s.generatingPdf), color: "blue" }).start();
   const { totalHours, totalAmount } = await render(
     entries, rate, invDate, invNum, outPath,
     config.user, company, showRawHours, cur,
   );
-  genSpinner.succeed(chalk.bold.green("Invoice generado exitosamente"));
+  genSpinner.succeed(chalk.bold.green(s.invoiceGenerated));
   console.log();
-  console.log(`  ${chalk.dim("Horas:")}  ${chalk.bold(`${totalHours.toFixed(1)} h`)}`);
-  console.log(`  ${chalk.dim("Monto:")}  ${chalk.bold.green(`${cur} ${fmtMoney(totalAmount)}`)}`);
-  console.log(`  ${chalk.dim("Archivo:")} ${chalk.cyan(outPath)}`);
+  console.log(`  ${chalk.dim(s.labelHours)}  ${chalk.bold(`${totalHours.toFixed(1)} h`)}`);
+  console.log(`  ${chalk.dim(s.labelAmount)}  ${chalk.bold.green(`${cur} ${fmtMoney(totalAmount)}`)}`);
+  console.log(`  ${chalk.dim(s.labelFile)} ${chalk.cyan(outPath)}`);
   console.log();
 }
 
@@ -423,26 +432,29 @@ async function runInteractive(): Promise<void> {
 
 async function runDirect(csv: string, opts: { rate?: string; date?: string; number?: string; output?: string; company?: string }): Promise<void> {
   if (!configExists()) {
-    console.log(chalk.red("No hay configuración. Ejecuta `invoice` primero para configurar."));
+    // Load locale if config exists for error messages
+    console.log(chalk.red(t().noConfig));
     process.exit(1);
   }
 
   const config = loadConfig();
+  setLocale(config.locale ?? "es");
+  const s = t();
   let company: Company;
 
   if (opts.company) {
     const found = config.companies.find((c) => c.id === opts.company);
     if (!found) {
-      console.log(chalk.red(`Empresa no encontrada: ${opts.company}`));
-      console.log(chalk.dim(`Empresas disponibles: ${config.companies.map((c) => c.id).join(", ")}`));
+      console.log(chalk.red(s.companyNotFound(opts.company)));
+      console.log(chalk.dim(s.availableCompanies(config.companies.map((c) => c.id).join(", "))));
       process.exit(1);
     }
     company = found;
   } else if (config.companies.length === 1) {
     company = config.companies[0];
   } else {
-    console.log(chalk.red("Hay múltiples empresas. Usa --company <id> para especificar."));
-    console.log(chalk.dim(`Empresas disponibles: ${config.companies.map((c) => c.id).join(", ")}`));
+    console.log(chalk.red(s.multipleCompanies));
+    console.log(chalk.dim(s.availableCompanies(config.companies.map((c) => c.id).join(", "))));
     process.exit(1);
   }
 
@@ -466,28 +478,25 @@ async function runDirect(csv: string, opts: { rate?: string; date?: string; numb
 // ── Entry point ─────────────────────────────────────────────────────────────
 
 export async function main(): Promise<void> {
+  // Load locale from config if it exists (for help text)
+  if (configExists()) {
+    const config = loadConfig();
+    setLocale(config.locale ?? "es");
+  }
+
+  const s = t();
   const program = new Command();
   program
     .name("invoice")
-    .description("Generate PDF invoices from Jira Logged Time CSV exports.")
+    .description(s.cliDescription)
     .version(PKG_VERSION)
-    .addHelpText("after", `
-Usage modes:
-  invoice                   Interactive mode with step-by-step prompts
-  invoice generate f.csv    Direct mode without prompts
-
-Examples:
-  $ invoice                              Start the interactive wizard
-  $ invoice generate report.csv          Generate with company defaults
-  $ invoice generate r.csv --rate 50     Use a custom hourly rate
-  $ invoice generate r.csv --company x   Specify company by ID
-`)
+    .addHelpText("after", s.helpAfterText)
     .action(async () => {
       try {
         await runInteractive();
       } catch (err) {
         if (err instanceof Error && err.message.includes("User force closed")) {
-          console.log(chalk.dim("\nSaliendo..."));
+          console.log(chalk.dim(`\n${t().exiting}`));
           process.exit(0);
         }
         throw err;
@@ -496,13 +505,13 @@ Examples:
 
   program
     .command("generate")
-    .description("Generate invoice directly (no interactive prompts)")
-    .argument("<csv>", "Jira CSV export file")
-    .option("--rate <number>", "Hourly rate (default: company rate)")
-    .option("--date <string>", "Invoice date (default: today)")
-    .option("--number <string>", "Invoice number")
-    .option("--output <string>", "Output PDF path")
-    .option("--company <id>", "Company ID")
+    .description(s.generateDescription)
+    .argument("<csv>", s.csvArgument)
+    .option("--rate <number>", s.optRate)
+    .option("--date <string>", s.optDate)
+    .option("--number <string>", s.optNumber)
+    .option("--output <string>", s.optOutput)
+    .option("--company <id>", s.optCompany)
     .action(runDirect);
 
   await program.parseAsync();
