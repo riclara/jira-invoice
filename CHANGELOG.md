@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/riclara/jira-invoice/compare/jira-invoice-v1.1.0...jira-invoice-v1.2.0) (2026-03-17)
+
+
+### Features
+
+* add multi-language support (English/Spanish) ([aa331e6](https://github.com/riclara/jira-invoice/commit/aa331e6bf007ac3529162b522bb132b4d5714225))
+* add multi-language support (English/Spanish) ([d60136a](https://github.com/riclara/jira-invoice/commit/d60136a0fd60af9d8a21da30f41c83a9921053de))
+
 ## [1.1.0](https://github.com/riclara/jira-invoice/compare/jira-invoice-v1.0.2...jira-invoice-v1.1.0) (2026-03-17)
 
 
