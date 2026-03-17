@@ -1,0 +1,36 @@
+{
+  "name": "jira-invoice",
+  "version": "1.0.0",
+  "description": "CLI para generar invoices PDF desde CSV de Jira",
+  "type": "module",
+  "bin": {
+    "jira-invoice": "dist/index.js",
+    "invoice": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7",
+    "chalk": "^5",
+    "cli-table3": "^0.6",
+    "commander": "^13",
+    "csv-parse": "^5",
+    "ora": "^8",
+    "pdfmake": "^0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/pdfmake": "^0.2",
+    "tsx": "^4",
+    "typescript": "^5.7"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
