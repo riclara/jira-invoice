@@ -18,14 +18,14 @@ const MONTHS: Record<string, number> = {
 
 const DATE_RE = /^\d{2}\/\w{3}\/\d{2}$/;
 
-function parseDate(s: string): Date {
+export function parseDate(s: string): Date {
   const [dd, mon, yy] = s.trim().split("/");
   const month = MONTHS[mon];
   if (month === undefined) throw new Error(`Mes no reconocido: ${mon}`);
   return new Date(2000 + parseInt(yy), month, parseInt(dd));
 }
 
-function parseHours(raw: string): number {
+export function parseHours(raw: string): number {
   if (!raw || !raw.trim()) return 0;
   let total = 0;
   const hMatch = raw.match(/(\d+(?:\.\d+)?)h/);
@@ -35,7 +35,7 @@ function parseHours(raw: string): number {
   return total;
 }
 
-function weekdays(start: Date, end: Date): Date[] {
+export function weekdays(start: Date, end: Date): Date[] {
   const days: Date[] = [];
   const d = new Date(start);
   while (d <= end) {
@@ -47,7 +47,7 @@ function weekdays(start: Date, end: Date): Date[] {
   return days;
 }
 
-function applyDailyCap(entries: WorkEntry[], maxHoursPerDay: number | null): WorkEntry[] {
+export function applyDailyCap(entries: WorkEntry[], maxHoursPerDay: number | null): WorkEntry[] {
   if (maxHoursPerDay === null) return entries;
 
   const byDate = new Map<string, number[]>();
@@ -99,7 +99,7 @@ function getHeaders(text: string): string[] {
 
 // ── Parsers ─────────────────────────────────────────────────────────────────
 
-function parsePivot(text: string): WorkEntry[] {
+export function parsePivot(text: string): WorkEntry[] {
   const rows = csvParse(text, { columns: true, skip_empty_lines: true }) as Record<string, string>[];
   if (rows.length === 0) return [];
 
@@ -130,7 +130,7 @@ function parsePivot(text: string): WorkEntry[] {
   return entries;
 }
 
-function parseDateCol(text: string): WorkEntry[] {
+export function parseDateCol(text: string): WorkEntry[] {
   const rows = csvParse(text, { columns: true, skip_empty_lines: true }) as Record<string, string>[];
 
   const singleDays = new Set<string>();

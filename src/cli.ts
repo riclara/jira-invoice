@@ -3,8 +3,12 @@
  */
 
 import { existsSync, readdirSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { Command } from "commander";
+
+const require = createRequire(import.meta.url);
+const { version: PKG_VERSION } = require("../package.json");
 import { input, confirm, search } from "@inquirer/prompts";
 import chalk from "chalk";
 import Table from "cli-table3";
@@ -461,12 +465,23 @@ async function runDirect(csv: string, opts: { rate?: string; date?: string; numb
 
 // ── Entry point ─────────────────────────────────────────────────────────────
 
-export function main(): void {
+export async function main(): Promise<void> {
   const program = new Command();
   program
     .name("invoice")
-    .description("Genera invoices PDF desde CSV de Jira Logged Time")
-    .version("1.0.0")
+    .description("Genera invoices PDF a partir de CSVs exportados de Jira Logged Time.")
+    .version(PKG_VERSION)
+    .addHelpText("after", `
+Modos de uso:
+  invoice                   Modo interactivo con prompts paso a paso
+  invoice generate f.csv    Modo directo sin prompts
+
+Ejemplos:
+  $ invoice                              Inicia el wizard interactivo
+  $ invoice generate reporte.csv         Genera con defaults de la empresa
+  $ invoice generate r.csv --rate 50     Usa tarifa personalizada
+  $ invoice generate r.csv --company x   Especifica empresa por ID
+`)
     .action(async () => {
       try {
         await runInteractive();
@@ -481,7 +496,7 @@ export function main(): void {
 
   program
     .command("generate")
-    .description("Modo directo (no interactivo)")
+    .description("Genera invoice directamente (sin prompts interactivos)")
     .argument("<csv>", "CSV exportado de Jira")
     .option("--rate <number>", "Tarifa por hora (default: tarifa de la empresa)")
     .option("--date <string>", "Fecha del invoice (default: hoy)")
@@ -490,5 +505,5 @@ export function main(): void {
     .option("--company <id>", "ID de la empresa")
     .action(runDirect);
 
-  program.parse();
+  await program.parseAsync();
 }
