@@ -1,5 +1,7 @@
 # Invoice Generator
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/riclara/jira-invoice)
+
 > **[Version en espanol](README.es.md)**
 > [Blog post in English](https://ricardolara.dev/blog/build-your-own-cli/)
 > [Blog post in Spanish](https://ricardolara.dev/es/blog/build-your-own-cli/)
